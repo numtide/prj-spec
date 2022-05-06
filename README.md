@@ -5,6 +5,8 @@ project-centric tooling. With the ambition that *all* tools adopt it 😇
 
 > [View document](./PRJ_SPEC.md)
 
+**STATUS: unstable**
+
 ## Rationale
 
 For the longest time, Unix tools would litter the user's home with dotfiles
