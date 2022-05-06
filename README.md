@@ -43,6 +43,12 @@ In alphabetical order.
 
 PRs to add your own are welcome!
 
+## Contributions
+
+Contributions are welcome!
+
+Use the [Discussions](https://github.com/numtide/prj-spec/discussions) page to discuss scope and implementation. Or send PRs.
+
 ## License
 
 This document is licensed under the [CC0 1.0](./LICENSE).
