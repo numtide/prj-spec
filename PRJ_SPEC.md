@@ -1,171 +1,156 @@
 # PRJ Base Directory Specification
 
-Jonas Chevalier <zimbatm@zimbatm.com>
+Authors:
+
+- Jonas Chevalier [zimbatm@zimbatm.com](mailto:zimbatm@zimbatm.com)
 
 Version 0.1
 
-## Introduction
+# Introduction
 
-Like [XDG Base Directory Specification][xdg] but for projects.
+This document establishes a set of conventions for project-centric tools to follow. By adopting a common posture, tools can avoid re-inventing the same logic over and over again.
 
-Project root directories are getting cluttered with various files. This
-specification defines where these files should be looked for by defining one
-or more base directories relative to which files should be located.
+A project-centric tool is any software that operates primarily inside of a source tree. For example code formatters, code linters, build systems, ... This is in contrast with user-centric tools that are meant to be executed by the user, like applications. Or system-centric tools that are meant to be executed by the system, like system services.
 
-## Basics
+The intended audience is developers who write such tools or users who might want to ask developers to adopt this as a standard.
 
-The PRJ Base Directory Specification is based on the following concepts:
+The approach adopted by this document is similar in spirit to [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html) which establishes conventions for user-centric tools for where to put their configuration and cache in the users’s homes.
 
-* There is a single base directory relative to which project-specific data
-  files should be written. This directory is defined by the environment
-  variable `$PRJ_DATA_HOME`.
+# Conventions
 
-* There is a single base directory relative to which project-specific
-  configuration files should be written. This directory is defined by the
-  environment variable `$PRJ_CONFIG_HOME`.
+The PRJ Base Directory Specification is based on the following conventions:
 
-* There is a set of preference ordered base directories relative to which data
-  files should be searched. This set of directories is defined by the
-  environment variable `$PRJ_DATA_DIRS`.
+## Project root
 
-* There is a set of preference ordered base directories relative to which
-  configuration files should be searched. This set of directories is defined
-  by the environment variable `$PRJ_CONFIG_DIRS`.
+The project root is a single base directory that points to the root of the project. Typically that directory would be the root of the source tree checked out by the SCM (git, svn, ...).
 
-* There is a single base directory relative to which project-specific
-  non-essential (cached) data should be written. This directory is defined by
-  the environment variable `$PRJ_CACHE_HOME`.
+Most tools need to find the project root in order to find their configuration file or to traverse it (for example to format all of the files).
 
-* There is a single base directory relative to which project-specific runtime
-  files and other file objects should be placed. This directory is defined by
-  the environment variable `$PRJ_RUNTIME_DIR`.
+If a tool needs a project root, it should follow the following heuristic:
 
-All paths set in these environment variables must be absolute. If an
-implementation encounters a relative path in any of these variables it should
-consider the path invalid and ignore it.
+### Specification
 
-## Environment variables
+The `PRJ_ROOT` MUST be an absolute path that points to the project root.
 
-`$PRJ_ROOT` defines the root directory of the project where the code is
-checked out. This would map to `$(git rev-parse --show-toplevel)` for example.
+If the environment variable `$PRJ_ROOT` is set, tools MUST use it over any built-in heuristic to find the project root.
 
-`$PRJ_DATA_HOME` defines the base directory relative to which project specific
-data files should be stored. If `$PRJ_DATA_HOME` is either not set or empty, a
-default equal to `$PRJ_ROOT/.local/share` should be used.
+Otherwise, the tool is free to define its own heuristic.
 
-`$PRJ_CONFIG_HOME` defines the base directory relative to which project
-specific configuration files should be stored. If `$PRJ_CONFIG_HOME` is either
-not set or empty, a default equal to `$PRJ_ROOT/.config` should be used.
+### Example
 
-`$PRJ_DATA_DIRS` defines the preference-ordered set of base directories to
-search for data files in addition to the `$PRJ_DATA_HOME` base directory. The
-directories in `$PRJ_DATA_DIRS` should be seperated with a colon ':'.
+A typical bash implementation, that looks for the `.config` folder as a fallback heuristic would be:
 
-If `$PRJ_DATA_DIRS` is either not set or empty, a value equal to
-`/usr/local/share/:/usr/share/` should be used.
+```bash
+# Look for the .config folder in the current directory and up
+find_prj_config() (
+  local old_pwd
+  while [[ $old_pwd != $PWD ]]; do
+    if [[ -d .config ]]; then
+      echo "$PWD"
+      return 0
+    fi
+    old_pwd=$PWD
+    cd ..
+    if [[ $old_pwd = "$PWD" ]]; then
+       # We're at the top and didn't find anything
+       echo "ERROR: could not find project root" >&2
+       return 1
+    if
+  done
+)
 
-`$PRJ_CONFIG_DIRS` defines the preference-ordered set of base directories to
-search for configuration files in addition to the `$PRJ_CONFIG_HOME` base
-directory. The directories in `$PRJ_CONFIG_DIRS` should be seperated with a
-colon ':'.
+: "${PRJ_ROOT:=$(find_prj_root)"
+```
 
-If `$PRJ_CONFIG_DIRS` is either not set or empty, a value equal to `/etc/xdg`
-should be used.
+If the tool doesn’t have any configuration and can assume Git as the SCM, it might look like this:
 
-The order of base directories denotes their importance; the first directory
-listed is the most important. When the same information is defined in multiple
-places the information defined relative to the more important base directory
-takes precedent. The base directory defined by `$PRJ_DATA_HOME` is considered
-more important than any of the base directories defined by `$PRJ_DATA_DIRS.`
-The base directory defined by `$PRJ_CONFIG_HOME` is considered more important
-than any of the base directories defined by `$PRJ_CONFIG_DIRS`.
+```bash
+: "${PRJ_ROOT:=$(git rev-parse --show-toplevel)"
+```
 
-`$PRJ_CACHE_HOME` defines the base directory relative to which project
-specific non-essential data files should be stored. If `$PRJ_CACHE_HOME` is
-either not set or empty, a default equal to `$PRJ_ROOT/.cache` should be used.
+## Config home
 
-`$PRJ_RUNTIME_DIR` defines the base directory relative to which
-project-specific non-essential runtime files and other file objects (such as
-sockets, named pipes, ...) should be stored. The directory MUST be owned by
-the project, and he MUST be the only one having read and write access to it.
-Its Unix access mode MUST be 0700.
+The config home represents the folder that stores the tool configuration file.
 
-The lifetime of the directory MUST be bound to the project being logged in. It
-MUST be created when the project first logs in and if the project fully logs
-out the directory MUST be removed. If the project logs in more than once he
-should get pointed to the same directory, and it is mandatory that the
-directory continues to exist from his first login to his last logout on the
-system, and not removed in between. Files in the directory MUST not survive
-reboot or a full logout/login cycle.
+Historically that home would be the project root in most cases. We aim to change this to a `.config` sub-folder relative to the project root.
 
-The directory MUST be on a local file system and not shared with any other
-system. The directory MUST by fully-featured by the standards of the operating
-system. More specifically, on Unix-like operating systems AF_UNIX sockets,
-symbolic links, hard links, proper permissions, file locking, sparse files,
-memory mapping, file change notifications, a reliable hard link count must be
-supported, and no restrictions on the file name character set should be
-imposed. Files in this directory MAY be subjected to periodic clean-up. To
-ensure that your files are not removed, they should have their access time
-timestamp modified at least once every 6 hours of monotonic time or the
-'sticky' bit should be set on the file.
+### Specification
 
-If `$PRJ_RUNTIME_DIR` is not set applications should fall back to a
-replacement directory with similar capabilities and print a warning message.
-Applications should use this directory for communication and synchronization
-purposes and should not place larger files in it, since it might reside in
-runtime memory and cannot necessarily be swapped out to disk.  Referencing
-this specification
+If the environment variable `$PRJ_CONFIG_HOME` is set, tools MUST use it to look for their configuration files.
 
-Other specifications may reference this specification by specifying the
-location of a data file as `$PRJ_DATA_DIRS/subdir/filename.` This implies
-that:
+Otherwise, if the environment variable `$PRJ_ROOT` is set, the tool MUST use it to look for configuration files in `$PRJ_ROOT/.config`.
 
-* Such file should be installed to `$datadir/subdir/filename` with `$datadir`
-  defaulting to /usr/share.
+Otherwise, the tool is free to pick its own logic. Which might include deciding to abort.
 
-* A project specific version of the data file may be created in
-  `$PRJ_DATA_HOME/subdir/filename,` taking into account the default value for
-  `$PRJ_DATA_HOME` if `$PRJ_DATA_HOME` is not set.
+### Example
 
-* Lookups of the data file should search for `./subdir/filename` relative to
-  all base directories specified by `$PRJ_DATA_HOME` and `$PRJ_DATA_DIRS` . If
-  an environment variable is either not set or empty, its default value as
-  defined by this specification should be used instead. 
+A typical bash implementation would be:
 
-Specifications may reference this specification by specifying the location of
-a configuration file as `$PRJ_CONFIG_DIRS/subdir/filename.` This implies that:
+```bash
+: "${PRJ_CONFIG_HOME:=${PRJ_ROOT}/.config}"
+my_config_file=${PRJ_CONFIG_HOME}/my_tool_name.ext
+```
 
-* Default configuration files should be installed to
-  `$sysconfdir/xdg/subdir/filename` with `$sysconfdir` defaulting to /etc.
+### Recommendation
 
-* A project specific version of the configuration file may be created in
-  `$PRJ_CONFIG_HOME/subdir/filename,` taking into account the default value
-  for `$PRJ_CONFIG_HOME` if `$PRJ_CONFIG_HOME` is not set.
+In most cases, it’s best if the tool doesn’t load user-level configuration files to avoid differences between machines.
 
-* Lookups of the configuration file should search for `./subdir/filename`
-  relative to all base directories indicated by `$PRJ_CONFIG_HOME` and
-  `$PRJ_CONFIG_DIRS` . If an environment variable is either not set or empty,
-  its default value as defined by this specification should be used instead. 
+## Project ID
 
-If, when attempting to write a file, the destination directory is non-existent
-an attempt should be made to create it with permission 0700. If the
-destination directory exists already the permissions should not be changed.
-The application should be prepared to handle the case where the file could not
-be written, either because the directory was non-existent and could not be
-created, or for any other reason. In such case it may chose to present an
-error message to the project.
+The project ID is an optional unique identifier for the project. It’s mostly useful combined with other things.
 
-When attempting to read a file, if for any reason a file in a certain
-directory is inaccessible, e.g. because the directory is non-existent, the
-file is non-existent or the project is not authorized to open the file, then
-the processing of the file in that directory should be skipped. If due to this
-a required file could not be found at all, the application may chose to
-present an error message to the project.
+### Specification
 
-A specification that refers to `$PRJ_DATA_DIRS` or `$PRJ_CONFIG_DIRS` should
-define what the behaviour must be when a file is located under multiple base
-directories. It could, for example, define that only the file under the most
-important base directory should be used or, as another example, it could
-define rules for merging the information from the different files. 
+The PRJ_ID value MUST pass the following regular expression: `^[a-zA-Z0-9_-]{,32}$`. It can be a UUIDv4 or some other random identifier.
 
-[xdg]: https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+If the environment variable `$PRJ_ID` is set, tools MUST use it.
+
+Otherwise, if the `PRJ_CONFIG_HOME` is set and a `prj_id` file exists, it would load it after stripping any trailing white spaces.
+
+Otherwise, the tool is free to pick its own logic.
+
+### Example
+
+Bash implementation:
+
+```bash
+if [[ -z "${PRJ_ID:-}" && -d "${PRJ_CONFIG_HOME/prj_id}" ]]; then
+  PRJ_ID=$(< "${PRJ_CONFIG_HOME}/prj_id")
+fi
+```
+
+### TODO
+
+Consider adding some sort of fallback based on `PRJ_ROOT | sha256sum`?
+
+## Cache home
+
+The cache home represents the folder that stores intermediate results that can be re-created from other sources. It SHOULD be safe for the user to delete that folder at any time and not lose any information.
+
+### Specification
+
+If the environment variable `$PRJ_CACHE_HOME` is set, tools MUST use it. The value MUST be an absolute path.
+
+Otherwise, if the `$PRJ_ID` is set, tools MUST set it to `${XDG_CACHE_HOME}/prj/${PRJ_ID}`.
+
+Otherwise, the tool MUST set it to `${PRJ_ROOT}/.cache`.
+
+### Example
+
+Bash implementation
+
+```bash
+: "${XDG_CACHE_HOME:=${HOME}/.cache}"
+
+if [[ -z "${PRJ_CACHE_HOME:-}" ]]; then
+  if [[ -n "${PRJ_ID:-}" ]]; then
+    PRJ_CACHE_HOME="${XDG_CACHE_HOME}/prj/${PRJ_ID}"
+  else
+    PRJ_CACHE_HOME="${PRJ_ROOT}/.cache"
+  fi
+fi
+```
+
+### Rationale
+
+Cache directories often contain a deep file structure that can hit some filesystem limits on some system. Given that the user’s home is usually higher in the file hierarchy, it’s best to place it there. Another factor is that users might have multiple checkouts of a project and that allows sharing the build caches.

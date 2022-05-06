@@ -37,8 +37,11 @@ In alphabetical order.
 
 PRs to add your own are welcome!
 
-- [direnv](https://direnv.net)
-- [treefmt](https://github.com/numtide/treefmt)
+## Libraries following this spec
+
+In alphabetical order.
+
+PRs to add your own are welcome!
 
 ## License
 
