@@ -43,6 +43,10 @@ In alphabetical order.
 
 PRs to add your own are welcome!
 
+## Related projects
+
+* [dot-config](https://dot-config.github.io/) - defines `.config` for projects
+
 ## Contributions
 
 Contributions are welcome!
