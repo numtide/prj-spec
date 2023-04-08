@@ -1,0 +1,121 @@
+#!/usr/bin/env bash
+
+# Look for the .config folder in the current directory and up
+find_prj_config() (
+	local old_pwd
+	while [[ $old_pwd != $PWD ]]; do
+		if [[ -d .config ]]; then
+			echo "$PWD"
+			return 0
+		fi
+		old_pwd=$PWD
+		cd ..
+	done
+	# We're at the top and didn't find anything
+	log_error "ERROR: could not find project root" >&2
+	return 1
+)
+
+{
+	: "${XDG_CONFIG_HOME:=${HOME}/.config}"
+	: "${XDG_CACHE_HOME:=${HOME}/.cache}"
+	: "${XDG_DATA_HOME:=${HOME}/.local/share}"
+	: "${XDG_STATE_HOME:=${HOME}/.local/state}"
+	: "${XDG_RUNTIME_DIR:=${HOME}/.local/state}"
+
+	: "${GIT_DIR:=$(git rev-parse --absolute-git-dir 2>/dev/null)}"
+
+	# PRJ_ROOT
+	_prj_root="${GIT_DIR%/.git}"
+	: "${PRJ_ROOT:=${_prj_root:=$(find_prj_config)}}"
+
+	# PRJ_CONFIG_HOME - always local to the project
+	: "${PRJ_CONFIG_HOME:=${PRJ_ROOT}/.config}"
+	mkdir -p "${PRJ_CONFIG_HOME}"
+
+	if [[ -z "${PRJ_ID:-}" && -f "${PRJ_CONFIG_HOME}/prj_id" ]]; then
+		PRJ_ID=$(<"${PRJ_CONFIG_HOME}/prj_id")
+	fi
+
+	# PRJ_RUNTIME_DIR - always local to the project
+	: "${PRJ_RUNTIME_DIR:=${PRJ_ROOT}/.run}"
+	mkdir -p "${PRJ_RUNTIME_DIR}"
+
+	# PRJ_CACHE_HOME - shared if PRJ_ID is set
+	if [[ -z "${PRJ_CACHE_HOME:-}" ]]; then
+		if [[ -n "${PRJ_ID:-}" ]]; then
+			PRJ_CACHE_HOME="${XDG_CACHE_HOME}/prj/${PRJ_ID}"
+		else
+			PRJ_CACHE_HOME="${PRJ_ROOT}/.cache"
+		fi
+	fi
+	mkdir -p "${PRJ_CACHE_HOME}"
+
+	# PRJ_DATA_HOME - shared if PRJ_ID is set
+	if [[ -z "${PRJ_DATA_HOME:-}" ]]; then
+		if [[ -n "${PRJ_ID:-}" ]]; then
+			PRJ_DATA_HOME="${XDG_DATA_HOME}/prj/${PRJ_ID}"
+		else
+			PRJ_DATA_HOME="${PRJ_ROOT}/.local/share"
+		fi
+	fi
+	mkdir -p "${PRJ_DATA_HOME}"
+
+	# PRJ_STATE_HOME - shared if PRJ_ID is set
+	if [[ -z "${PRJ_STATE_HOME:-}" ]]; then
+		if [[ -n "${PRJ_ID:-}" ]]; then
+			PRJ_STATE_HOME="${XDG_STATE_HOME}/prj/${PRJ_ID}"
+		else
+			PRJ_STATE_HOME="${PRJ_ROOT}/.local/state"
+		fi
+	fi
+	mkdir -p "${PRJ_STATE_HOME}"
+
+	# PRJ_PATH - shared if PRJ_ID is set
+	if [[ -z "${PRJ_PATH:-}" ]]; then
+		if [[ -n "${PRJ_ID:-}" ]]; then
+			PRJ_PATH="${HOME}/.local/bin/prj/${PRJ_ID}"
+		else
+			PRJ_PATH="${PRJ_ROOT}/.local/bin"
+		fi
+	fi
+	mkdir -p "${PRJ_PATH}"
+
+	# Git ignore all `PRJ_*` in the main checkout
+	# i.e. if we're not in a worktree, that is: GIT_DIR is not a file
+	if [[ -n "${GIT_DIR}" && -d "${GIT_DIR}" ]]; then
+		for varname in \
+			PRJ_CONFIG_HOME \
+			PRJ_CACHE_HOME \
+			PRJ_DATA_HOME \
+			PRJ_STATE_HOME \
+			PRJ_RUNTIME_DIR; do
+			[[ ! ${!varname} == ${PRJ_ROOT}* ]] && continue
+			grep "${!varname#${PRJ_ROOT}}" "$GIT_DIR/info/exclude" &>/dev/null && continue
+			cat >>"$GIT_DIR/info/exclude" <<<"${!varname#${PRJ_ROOT}}"
+			log_status Add to "${GIT_DIR#${PRJ_ROOT}/}/info/exclude": "${!varname#${PRJ_ROOT}}"
+		done
+	fi
+}
+
+unset -f find_prj_config
+
+PATH_add "${PRJ_PATH}"
+export PRJ_ROOT
+export PRJ_ID
+export PRJ_PATH
+export PRJ_CONFIG_HOME
+export PRJ_CACHE_HOME
+export PRJ_DATA_HOME
+export PRJ_STATE_HOME
+export PRJ_RUNTIME_DIR
+[ -z ${DIRENV_PRJ_SILENCE+x} ] && log_status "PRJ_ROOT:        ${PRJ_ROOT}"
+[ -z ${DIRENV_PRJ_SILENCE+x} ] && log_status "PRJ_ID:          ${PRJ_ID=none}"
+[ -z ${DIRENV_PRJ_SILENCE+x} ] && log_status "PRJ_CONFIG_HOME: ${PRJ_CONFIG_HOME#${PRJ_ROOT}/}"
+[ -z ${DIRENV_PRJ_SILENCE+x} ] && log_status "PRJ_RUNTIME_DIR: ${PRJ_RUNTIME_DIR#${PRJ_ROOT}/}"
+[ -z ${DIRENV_PRJ_SILENCE+x} ] && log_status "PRJ_CACHE_HOME:  ${PRJ_CACHE_HOME#${PRJ_ROOT}/}"
+[ -z ${DIRENV_PRJ_SILENCE+x} ] && log_status "PRJ_DATA_HOME:   ${PRJ_DATA_HOME#${PRJ_ROOT}/}"
+[ -z ${DIRENV_PRJ_SILENCE+x} ] && log_status "PRJ_STATE_HOME:  ${PRJ_STATE_HOME#${PRJ_ROOT}/}"
+[ -z ${DIRENV_PRJ_SILENCE+x} ] && log_status "PRJ_PATH:        ${PRJ_PATH#${PRJ_ROOT}/}"
+
+direnv_layout_dir="${PRJ_DATA_HOME}/direnv"
