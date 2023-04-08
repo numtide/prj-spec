@@ -114,7 +114,7 @@ Otherwise, the tool is free to pick its own logic.
 Bash implementation:
 
 ```bash
-if [[ -z "${PRJ_ID:-}" && -d "${PRJ_CONFIG_HOME/prj_id}" ]]; then
+if [[ -z "${PRJ_ID:-}" && -f "${PRJ_CONFIG_HOME/prj_id}" ]]; then
   PRJ_ID=$(< "${PRJ_CONFIG_HOME}/prj_id")
 fi
 ```
