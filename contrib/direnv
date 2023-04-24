@@ -20,8 +20,6 @@ find_prj_config() (
 	: "${XDG_CONFIG_HOME:=${HOME}/.config}"
 	: "${XDG_CACHE_HOME:=${HOME}/.cache}"
 	: "${XDG_DATA_HOME:=${HOME}/.local/share}"
-	: "${XDG_STATE_HOME:=${HOME}/.local/state}"
-	: "${XDG_RUNTIME_DIR:=${HOME}/.local/state}"
 
 	: "${GIT_DIR:=$(git rev-parse --absolute-git-dir 2>/dev/null)}"
 
@@ -56,27 +54,18 @@ find_prj_config() (
 		if [[ -n "${PRJ_ID:-}" ]]; then
 			PRJ_DATA_HOME="${XDG_DATA_HOME}/prj/${PRJ_ID}"
 		else
-			PRJ_DATA_HOME="${PRJ_ROOT}/.local/share"
+			PRJ_DATA_HOME="${PRJ_ROOT}/.data"
 		fi
 	fi
 	mkdir -p "${PRJ_DATA_HOME}"
-
-	# PRJ_STATE_HOME - shared if PRJ_ID is set
-	if [[ -z "${PRJ_STATE_HOME:-}" ]]; then
-		if [[ -n "${PRJ_ID:-}" ]]; then
-			PRJ_STATE_HOME="${XDG_STATE_HOME}/prj/${PRJ_ID}"
-		else
-			PRJ_STATE_HOME="${PRJ_ROOT}/.local/state"
-		fi
-	fi
-	mkdir -p "${PRJ_STATE_HOME}"
+	PRJ_STATE_HOME="$PRJ_DATA_HOME"
 
 	# PRJ_PATH - shared if PRJ_ID is set
 	if [[ -z "${PRJ_PATH:-}" ]]; then
 		if [[ -n "${PRJ_ID:-}" ]]; then
 			PRJ_PATH="${HOME}/.local/bin/prj/${PRJ_ID}"
 		else
-			PRJ_PATH="${PRJ_ROOT}/.local/bin"
+			PRJ_PATH="${PRJ_ROOT}/.bin"
 		fi
 	fi
 	mkdir -p "${PRJ_PATH}"
