@@ -58,7 +58,6 @@ find_prj_config() (
 		fi
 	fi
 	mkdir -p "${PRJ_DATA_HOME}"
-	PRJ_STATE_HOME="$PRJ_DATA_HOME"
 
 	# PRJ_PATH - shared if PRJ_ID is set
 	if [[ -z "${PRJ_PATH:-}" ]]; then
@@ -80,7 +79,6 @@ export PRJ_PATH
 export PRJ_CONFIG_HOME
 export PRJ_CACHE_HOME
 export PRJ_DATA_HOME
-export PRJ_STATE_HOME
 export PRJ_RUNTIME_DIR
 [ -z ${DIRENV_PRJ_SILENCE+x} ] && log_status "PRJ_ROOT:        ${PRJ_ROOT}"
 [ -z ${DIRENV_PRJ_SILENCE+x} ] && log_status "PRJ_ID:          ${PRJ_ID=none}"
