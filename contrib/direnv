@@ -5,7 +5,7 @@
 find_prj_config() (
 	local old_pwd
 	while [[ $old_pwd != $PWD ]]; do
-		if [[ -d .config ]]; then
+		if [[ -d .config && "$HOME" != "$PWD" ]]; then
 			echo "$PWD"
 			return 0
 		fi
