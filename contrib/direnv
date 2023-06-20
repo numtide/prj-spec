@@ -69,22 +69,6 @@ find_prj_config() (
 		fi
 	fi
 	mkdir -p "${PRJ_PATH}"
-
-	# Git ignore all `PRJ_*` in the main checkout
-	# i.e. if we're not in a worktree, that is: GIT_DIR is not a file
-	if [[ -n "${GIT_DIR}" && -d "${GIT_DIR}" ]]; then
-		for varname in \
-			PRJ_CONFIG_HOME \
-			PRJ_CACHE_HOME \
-			PRJ_DATA_HOME \
-			PRJ_STATE_HOME \
-			PRJ_RUNTIME_DIR; do
-			[[ ! ${!varname} == ${PRJ_ROOT}* ]] && continue
-			grep "${!varname#${PRJ_ROOT}}" "$GIT_DIR/info/exclude" &>/dev/null && continue
-			cat >>"$GIT_DIR/info/exclude" <<<"${!varname#${PRJ_ROOT}}"
-			log_status Add to "${GIT_DIR#${PRJ_ROOT}/}/info/exclude": "${!varname#${PRJ_ROOT}}"
-		done
-	fi
 }
 
 unset -f find_prj_config
