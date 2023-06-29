@@ -4,7 +4,7 @@
 # Look for the .config folder in the current directory and up
 find_prj_config() (
 	local old_pwd
-	while [[ $old_pwd != $PWD ]]; do
+	while [[ $old_pwd != "$PWD" ]]; do
 		if [[ -d .config && "$HOME" != "$PWD" ]]; then
 			echo "$PWD"
 			return 0
@@ -18,7 +18,7 @@ find_prj_config() (
 )
 
 # Discover PRJ_ROOT if in a git repository.
-find_prj_root_with_git (
+find_prj_root_with_git() (
 	git rev-parse --show-toplevel 2>/dev/null
 )
 
@@ -86,11 +86,12 @@ export PRJ_DATA_HOME
 export PRJ_RUNTIME_DIR
 [ -z ${DIRENV_PRJ_SILENCE+x} ] && log_status "PRJ_ROOT:        ${PRJ_ROOT}"
 [ -z ${DIRENV_PRJ_SILENCE+x} ] && log_status "PRJ_ID:          ${PRJ_ID=none}"
-[ -z ${DIRENV_PRJ_SILENCE+x} ] && log_status "PRJ_CONFIG_HOME: ${PRJ_CONFIG_HOME#${PRJ_ROOT}/}"
-[ -z ${DIRENV_PRJ_SILENCE+x} ] && log_status "PRJ_RUNTIME_DIR: ${PRJ_RUNTIME_DIR#${PRJ_ROOT}/}"
-[ -z ${DIRENV_PRJ_SILENCE+x} ] && log_status "PRJ_CACHE_HOME:  ${PRJ_CACHE_HOME#${PRJ_ROOT}/}"
-[ -z ${DIRENV_PRJ_SILENCE+x} ] && log_status "PRJ_DATA_HOME:   ${PRJ_DATA_HOME#${PRJ_ROOT}/}"
-[ -z ${DIRENV_PRJ_SILENCE+x} ] && log_status "PRJ_STATE_HOME:  ${PRJ_STATE_HOME#${PRJ_ROOT}/}"
-[ -z ${DIRENV_PRJ_SILENCE+x} ] && log_status "PRJ_PATH:        ${PRJ_PATH#${PRJ_ROOT}/}"
+[ -z ${DIRENV_PRJ_SILENCE+x} ] && log_status "PRJ_CONFIG_HOME: ${PRJ_CONFIG_HOME#"${PRJ_ROOT}"/}"
+[ -z ${DIRENV_PRJ_SILENCE+x} ] && log_status "PRJ_RUNTIME_DIR: ${PRJ_RUNTIME_DIR#"${PRJ_ROOT}"/}"
+[ -z ${DIRENV_PRJ_SILENCE+x} ] && log_status "PRJ_CACHE_HOME:  ${PRJ_CACHE_HOME#"${PRJ_ROOT}"/}"
+[ -z ${DIRENV_PRJ_SILENCE+x} ] && log_status "PRJ_DATA_HOME:   ${PRJ_DATA_HOME#"${PRJ_ROOT}"/}"
+[ -z ${DIRENV_PRJ_SILENCE+x} ] && log_status "PRJ_STATE_HOME:  ${PRJ_STATE_HOME#"${PRJ_ROOT}"/}"
+[ -z ${DIRENV_PRJ_SILENCE+x} ] && log_status "PRJ_PATH:        ${PRJ_PATH#"${PRJ_ROOT}"/}"
 
+# shellcheck disable=SC2034
 direnv_layout_dir="${PRJ_DATA_HOME}/direnv"
