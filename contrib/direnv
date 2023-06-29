@@ -19,17 +19,13 @@ find_prj_config() (
 
 # Discover PRJ_ROOT if in a git repository.
 find_prj_root_with_git (
-	# remove everything after .git in the path because worktrees
-	# have the following path: /path/to/main/.git/worktrees/<name>
-	echo "${GIT_DIR%/.git*}"
+	git rev-parse --show-toplevel 2>/dev/null
 )
 
 {
 	: "${XDG_CONFIG_HOME:=${HOME}/.config}"
 	: "${XDG_CACHE_HOME:=${HOME}/.cache}"
 	: "${XDG_DATA_HOME:=${HOME}/.local/share}"
-
-	: "${GIT_DIR:=$(git rev-parse --absolute-git-dir 2>/dev/null)}"
 
 	# PRJ_ROOT
 	_prj_root="$(find_prj_root_with_git)"
