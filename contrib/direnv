@@ -90,7 +90,6 @@ export PRJ_RUNTIME_DIR
 [ -z ${DIRENV_PRJ_SILENCE+x} ] && log_status "PRJ_RUNTIME_DIR: ${PRJ_RUNTIME_DIR#"${PRJ_ROOT}"/}"
 [ -z ${DIRENV_PRJ_SILENCE+x} ] && log_status "PRJ_CACHE_HOME:  ${PRJ_CACHE_HOME#"${PRJ_ROOT}"/}"
 [ -z ${DIRENV_PRJ_SILENCE+x} ] && log_status "PRJ_DATA_HOME:   ${PRJ_DATA_HOME#"${PRJ_ROOT}"/}"
-[ -z ${DIRENV_PRJ_SILENCE+x} ] && log_status "PRJ_STATE_HOME:  ${PRJ_STATE_HOME#"${PRJ_ROOT}"/}"
 [ -z ${DIRENV_PRJ_SILENCE+x} ] && log_status "PRJ_PATH:        ${PRJ_PATH#"${PRJ_ROOT}"/}"
 
 # shellcheck disable=SC2034
