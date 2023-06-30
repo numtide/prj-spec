@@ -85,7 +85,7 @@ export PRJ_CACHE_HOME
 export PRJ_DATA_HOME
 export PRJ_RUNTIME_DIR
 [ -z ${DIRENV_PRJ_SILENCE+x} ] && log_status "PRJ_ROOT:        ${PRJ_ROOT}"
-[ -z ${DIRENV_PRJ_SILENCE+x} ] && log_status "PRJ_ID:          ${PRJ_ID=none}"
+[ -z ${DIRENV_PRJ_SILENCE+x} ] && log_status "PRJ_ID:          ${PRJ_ID-none}"
 [ -z ${DIRENV_PRJ_SILENCE+x} ] && log_status "PRJ_CONFIG_HOME: ${PRJ_CONFIG_HOME#"${PRJ_ROOT}"/}"
 [ -z ${DIRENV_PRJ_SILENCE+x} ] && log_status "PRJ_RUNTIME_DIR: ${PRJ_RUNTIME_DIR#"${PRJ_ROOT}"/}"
 [ -z ${DIRENV_PRJ_SILENCE+x} ] && log_status "PRJ_CACHE_HOME:  ${PRJ_CACHE_HOME#"${PRJ_ROOT}"/}"
