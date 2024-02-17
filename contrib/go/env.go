@@ -68,15 +68,9 @@ func Reload() {
 		if PrjId != "" {
 			return filepath.Join(xdg.DataHome, "prj", PrjId)
 		}
-		return filepath.Join(PrjRoot, ".local", "share")
+		return filepath.Join(PrjRoot, ".data")
 	})
-	PrjStateHome = getEnvOr("PRJ_STATE_HOME", func() string {
-		if PrjId != "" {
-			return filepath.Join(xdg.StateHome, "prj", PrjId)
-		}
-		return filepath.Join(PrjRoot, ".local", "state")
-	})
-	PrjPath = getEnvOr("PRJ_PATH", func() string { return filepath.Join(PrjRoot, ".local", "bin") })
+	PrjPath = getEnvOr("PRJ_PATH", func() string { return filepath.Join(PrjRoot, ".bin") })
 
 }
 
@@ -119,7 +113,6 @@ func SetAll() {
     os.Setenv("PRJ_RUNTIME_DIR", PrjRuntimeDir)
     os.Setenv("PRJ_CACHE_HOME", PrjCacheHome)
     os.Setenv("PRJ_DATA_HOME", PrjDataHome)
-    os.Setenv("PRJ_STATE_HOME", PrjStateHome)
     os.Setenv("PRJ_PATH", PrjPath)
 }
 
@@ -143,19 +136,6 @@ func DataFile(relPath string) (string, error) {
 func ConfigFile(relPath string) (string, error) {
     	Reload()
 	return pathutil.Create(relPath, []string{PrjConfigHome})
-}
-
-// StateFile returns a suitable location for the specified state file. State
-// files are usually volatile data files, not suitable to be stored relative
-// to the $XDG_DATA_HOME directory.
-// The relPath parameter must contain the name of the state file, and
-// optionally, a set of parent directories (e.g. appname/app.state).
-// If the specified directories do not exist, they will be created relative
-// to the base state directory. On failure, an error containing the
-// attempted paths is returned.
-func StateFile(relPath string) (string, error) {
-    	Reload()
-	return pathutil.Create(relPath, []string{PrjStateHome})
 }
 
 // CacheFile returns a suitable location for the specified cache file.
